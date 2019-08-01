@@ -3,6 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/ochinchina/supervisord/config"
+	"net/http"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/ochinchina/supervisord/events"
 	"github.com/ochinchina/supervisord/faults"
 	"github.com/ochinchina/supervisord/logger"
@@ -10,11 +16,6 @@ import (
 	"github.com/ochinchina/supervisord/signals"
 	"github.com/ochinchina/supervisord/types"
 	"github.com/ochinchina/supervisord/util"
-	"net/http"
-	"os"
-	"strings"
-	"sync"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -590,6 +591,16 @@ func (s *Supervisor) TailProcessStdoutLog(r *http.Request, args *ProcessLogReadI
 	}
 	var err error
 	reply.LogData, reply.Offset, reply.Overflow, err = proc.StdoutLog.ReadTailLog(int64(args.Offset), int64(args.Length))
+	return err
+}
+
+func (s *Supervisor) TailProcessStderrLog(r *http.Request, args *ProcessLogReadInfo, reply *ProcessTailLog) error {
+	proc := s.procMgr.Find(args.Name)
+	if proc == nil {
+		return fmt.Errorf("No such process %s", args.Name)
+	}
+	var err error
+	reply.LogData, reply.Offset, reply.Overflow, err = proc.StderrLog.ReadTailLog(int64(args.Offset), int64(args.Length))
 	return err
 }
 
