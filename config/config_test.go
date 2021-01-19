@@ -113,7 +113,7 @@ func TestGetBytesFromConfig(t *testing.T) {
 func TestGetUnitHttpServer(t *testing.T) {
 	config, _ := parse([]byte("[program:test]\nA=1024\nB=2KB\nC=3MB\nD=4GB\nE=test\n[unix_http_server]\n"))
 
-	entry, ok := config.GetUnixHttpServer()
+	entry, ok := config.GetUnixHTTPServer()
 
 	if !ok || entry == nil {
 		t.Error("Fail to get the unix_http_server")
@@ -178,6 +178,26 @@ func TestConfigWithInclude(t *testing.T) {
 
 	if entry == nil {
 		t.Error("fail to include section test")
+	}
+
+}
+
+func TestDefaultParams(t *testing.T) {
+	s := "[program:test]\nautorestart=true\ntest=1\n[program-default]\ncommand=/usr/bin/ls\nrestart=true\nautorestart=false"
+	config, _ := parse([]byte(s))
+	entry := config.GetProgram("test")
+	if entry.GetString("command", "") != "/usr/bin/ls" {
+		t.Error("fail to get command of program")
+	}
+	if entry.GetString("restart", "") != "true" {
+		t.Error("Fail to get restart value")
+	}
+
+	if entry.GetInt("test", 0) != 1 {
+		t.Error("Fail to get test value")
+	}
+	if entry.GetString("autorestart", "") != "true" {
+		t.Error("autorestart value should be true")
 	}
 
 }
