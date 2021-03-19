@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/ochinchina/supervisord/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -86,15 +87,21 @@ func TestGetStringValueFromConfig(t *testing.T) {
 func TestGetEnvValueFromConfig(t *testing.T) {
 	config, _ := parse([]byte("[program:test]\na=A=\"env1\",B=env2"))
 	entry := config.GetProgram("test")
-	envs := entry.GetEnv("a")
-	if len(envs) != 2 || envs[0] != "A=env1" || envs[1] != "B=env2" {
+	envs := make([]interface{}, 0)
+	for _, e := range entry.GetEnv("a") {
+		envs = append(envs, e)
+	}
+	if len(envs) != 2 || !util.InArray("A=env1", envs) || !util.InArray("B=env2", envs) {
 		t.Error("Fail to get env value")
 	}
 
 	config, _ = parse([]byte("[program:test]\na=A=env1,B=\"env2\""))
 	entry = config.GetProgram("test")
-	envs = entry.GetEnv("a")
-	if len(envs) != 2 || envs[0] != "A=env1" || envs[1] != "B=env2" {
+	envs = make([]interface{}, 0)
+	for _, e := range entry.GetEnv("a") {
+		envs = append(envs, e)
+	}
+	if len(envs) != 2 || !util.InArray("A=env1", envs) || !util.InArray("B=env2", envs) {
 		t.Error("Fail to get env value")
 	}
 
@@ -126,7 +133,7 @@ func TestGetUnitHttpServer(t *testing.T) {
 
 func TestProgramInGroup(t *testing.T) {
 	config, _ := parse([]byte("[program:test1]\nA=123\n[group:test]\nprograms=test1,test2\n[program:test2]\nB=hello\n[program:test3]\nC=tt"))
-	if config.GetProgram("test1").Group != "test" { //|| config.GetProgram( "test2" ).Group != "test" || config.GetProgram( "test3" ).Group == "test" {
+	if config.GetProgram("test1").Group != "test" { // || config.GetProgram( "test2" ).Group != "test" || config.GetProgram( "test3" ).Group == "test" {
 		t.Error("fail to test the program in a group")
 	}
 }
